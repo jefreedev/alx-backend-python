@@ -34,4 +34,23 @@ class TestGithubOrgClient(unittest.TestCase):
         """ Tests for public repo urls.
         """
         with patch("client.GithubOrgClient.org",
-                   Property)
+                   PropertyMock(return_value=result)):
+            res = GithubOrgClient(name).public_repos_url
+            self.assertEqual(res, result.get("repo_url"))
+
+    @patch("client.get_json")
+    def test_public_repos(self, mocked_method):
+        """ Tests for public Github repos urls.
+        """
+        payload = [{"name": "Google"}, {"name": "TT"}]
+        mocked_method.return_value = payload
+
+        with patch("client.GithubOrgClient.public_repos_url",
+                   new_callable=PropertyMock) as mocked_public:
+            mocked_public.return_value = "world"
+            res = GithubOrgClient("test").public_repos()
+
+            self.assertEqual(res, ["Google", "TT"])
+
+            mocked_public.assert_called_once()
+            mocked_method.assert_called_once()
